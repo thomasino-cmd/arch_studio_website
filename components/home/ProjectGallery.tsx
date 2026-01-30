@@ -180,7 +180,7 @@ export default function ProjectGallery() {
                 .grid-mode .project-item {
                     position: relative;
                     width: 100%;
-                    transform: none !important;
+                    transform: none;
                     pointer-events: auto;
                 }
                 
