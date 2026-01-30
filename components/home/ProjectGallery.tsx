@@ -26,39 +26,77 @@ export default function ProjectGallery() {
     const rotations = useRef(projects.map(() => Math.random() * 8 - 4)); // -4deg to 4deg
 
     useLayoutEffect(() => {
+        const container = containerRef.current;
+
+        if (!container) return;
+
+        document.body.style.overflow = "hidden";
+        let loadHandler: (() => void) | null = null;
+
         const ctx = gsap.context(() => {
             const items = gsap.utils.toArray<HTMLElement>(".project-item");
-            const container = containerRef.current;
 
-            if (!container) return;
-
-            // 1. Record Initial State (Stacked)
-            const state = Flip.getState(items);
-
-            // 2. Change to Final State (Grid)
-            container.classList.remove("stack-mode");
-            container.classList.add("grid-mode");
-
-            // 3. Animate from State (Stack) to Layout (Grid)
-            Flip.from(state, {
-                duration: 2,
-                ease: "expo.inOut",
-                stagger: {
-                    amount: 0.8,
-                    from: "start"
-                },
-                absolute: true,
-                spin: true,
-                onComplete: () => {
-                    setHasDealt(true);
-                    document.body.style.overflow = "auto";
-                    gsap.set(items, { clearProps: "all" });
-                    ScrollTrigger.refresh();
+            const waitForImages = () => {
+                const images = Array.from(container.querySelectorAll("img"));
+                if (images.length === 0) {
+                    return Promise.resolve();
                 }
-            });
+
+                return Promise.all(
+                    images.map((img) => {
+                        if (img.complete) {
+                            return Promise.resolve();
+                        }
+
+                        return new Promise<void>((resolve) => {
+                            const onDone = () => resolve();
+                            img.addEventListener("load", onDone, { once: true });
+                            img.addEventListener("error", onDone, { once: true });
+                        });
+                    })
+                );
+            };
+
+            const runFlipAnimation = () => {
+                // 1. Record Initial State (Stacked)
+                const state = Flip.getState(items);
+
+                // 2. Change to Final State (Grid)
+                container.classList.remove("stack-mode");
+                container.classList.add("grid-mode");
+
+                // 3. Animate from State (Stack) to Layout (Grid)
+                Flip.from(state, {
+                    duration: 2,
+                    ease: "expo.inOut",
+                    stagger: {
+                        amount: 0.8,
+                        from: "start"
+                    },
+                    absolute: true,
+                    spin: true,
+                    onComplete: () => {
+                        setHasDealt(true);
+                        document.body.style.overflow = "auto";
+                        gsap.set(items, { clearProps: "all" });
+                        ScrollTrigger.refresh();
+                    }
+                });
+            };
+
+            const startLoader = () => {
+                void waitForImages().then(runFlipAnimation);
+            };
+
+            if (document.readyState === "complete") {
+                startLoader();
+            } else {
+                loadHandler = () => startLoader();
+                window.addEventListener("load", loadHandler, { once: true });
+            }
 
             // 4. Setup Hover & Idle Animations
-            items.forEach((item, i) => {
+            items.forEach((item) => {
                 const img = item.querySelector("img");
                 if (!img) return;
 
@@ -84,7 +122,12 @@ export default function ProjectGallery() {
 
         }, containerRef);
 
-        return () => ctx.revert();
+        return () => {
+            if (loadHandler) {
+                window.removeEventListener("load", loadHandler);
+            }
+            ctx.revert();
+        };
     }, []);
 
     return (
