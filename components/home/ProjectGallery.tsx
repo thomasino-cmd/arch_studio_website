@@ -22,7 +22,8 @@ export default function ProjectGallery() {
     const containerRef = useRef<HTMLDivElement>(null);
     const [hasDealt, setHasDealt] = useState(false);
 
-    const rotations = useRef(projects.map((project) => ((project.id * 13) % 5) - 2)); // deterministic -2deg to 2deg
+    // Random rotations for the stack effect
+    const rotations = useRef(projects.map(() => Math.random() * 4 - 2)); // -2deg to 2deg
 
     useLayoutEffect(() => {
         const container = containerRef.current;
@@ -153,7 +154,7 @@ export default function ProjectGallery() {
                     padding: 0 2rem;
                 }
                 .grid-mode {
-                    margin-top: 0;
+                    margin-top: -30vh;
                     padding: 6rem 2rem 4rem;
                 }
                 .stack-mode .gallery-grid {
@@ -290,7 +291,7 @@ export default function ProjectGallery() {
             </div>
 
             <div style={{ marginTop: "3rem" }}>
-                <h2 className="section-title" style={{ fontSize: "5vw", lineHeight: 1, textTransform: "uppercase", fontWeight: "bold" }}>Selected Works</h2>
+                <h2 style={{ fontSize: "5vw", lineHeight: 1, textTransform: "uppercase", fontWeight: "bold" }}>Selected Works</h2>
             </div>
         </section>
     );
