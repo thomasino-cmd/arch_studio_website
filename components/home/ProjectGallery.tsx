@@ -23,7 +23,8 @@ export default function ProjectGallery() {
     const [hasDealt, setHasDealt] = useState(false);
 
     // Random rotations for the stack effect
-    const rotations = useRef(projects.map(() => Math.random() * 4 - 2)); // -2deg to 2deg
+    // Deterministic rotations for the stack effect to prevent hydration mismatches
+    const rotations = useRef(projects.map((_, i) => ((i % 2 === 0 ? 1 : -1) * (i + 1) * 0.8) % 4));
 
     useLayoutEffect(() => {
         const container = containerRef.current;
@@ -66,6 +67,9 @@ export default function ProjectGallery() {
                 container.classList.remove("stack-mode");
                 container.classList.add("grid-mode");
 
+                // Unlock scroll ONLY after animation completes to effectively prevent scrolling during transition
+                // document.body.style.overflow = "auto"; // Moved to onComplete
+
                 // 3. Animate from State (Stack) to Layout (Grid)
                 Flip.from(state, {
                     duration: 2.8,
@@ -78,7 +82,7 @@ export default function ProjectGallery() {
                     onComplete: () => {
                         setHasDealt(true);
                         document.body.classList.remove("is-loading");
-                        document.body.style.overflow = "auto";
+                        document.body.style.overflow = ""; // Restore scroll
                         gsap.set(items, { clearProps: "all" });
                         ScrollTrigger.refresh();
                         window.dispatchEvent(new Event("loader:complete"));
@@ -141,19 +145,26 @@ export default function ProjectGallery() {
             data-dealt={hasDealt ? "true" : "false"}
             style={{
                 backgroundColor: "var(--background)",
-                position: "relative",
-                zIndex: 10,
                 minHeight: "100vh"
             }}
         >
             <style jsx global>{`
                 /* Initial Stack State */
                 .stack-mode {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100vw;
                     height: 100vh;
+                    z-index: 9999; /* Ensure it covers everything including Hero */
                     overflow: hidden;
                     padding: 0 2rem;
+                    background-color: var(--background); /* Ensure opaque background */
                 }
                 .grid-mode {
+                    /* Return to flow */
+                    position: relative;
+                    z-index: 20;
                     margin-top: -30vh;
                     padding: 6rem 2rem 4rem;
                 }
@@ -164,21 +175,21 @@ export default function ProjectGallery() {
                 }
                 .stack-mode .project-item {
                     position: fixed;
-                    top: 45%;
+                    top: 40%; /* Moved up from 45% to align better with Hero title area */
                     left: 50%;
                     width: 320px;
                     height: 420px;
                     transform: translate(-50%, -50%) rotate(var(--stack-rotation));
-                    z-index: 100;
+                    z-index: 9005;
                     pointer-events: none;
                 }
-                /* Stacking order */
-                .stack-mode .project-item:nth-child(1) { z-index: 6; }
-                .stack-mode .project-item:nth-child(2) { z-index: 5; }
-                .stack-mode .project-item:nth-child(3) { z-index: 4; }
-                .stack-mode .project-item:nth-child(4) { z-index: 3; }
-                .stack-mode .project-item:nth-child(5) { z-index: 2; }
-                .stack-mode .project-item:nth-child(6) { z-index: 1; }
+                /* Stacking order - ensuring higher than Hero */
+                .stack-mode .project-item:nth-child(1) { z-index: 9006; }
+                .stack-mode .project-item:nth-child(2) { z-index: 9005; }
+                .stack-mode .project-item:nth-child(3) { z-index: 9004; }
+                .stack-mode .project-item:nth-child(4) { z-index: 9003; }
+                .stack-mode .project-item:nth-child(5) { z-index: 9002; }
+                .stack-mode .project-item:nth-child(6) { z-index: 9001; }
 
                 /* Final Grid State */
                 .grid-mode .gallery-grid {
@@ -229,24 +240,10 @@ export default function ProjectGallery() {
                     transform: translateY(0);
                 }
 
-                .loader-title {
-                    position: fixed;
-                    bottom: 4rem;
-                    left: 4rem;
-                    font-size: 0.8rem;
-                    letter-spacing: 0.3em;
-                    text-transform: uppercase;
-                    opacity: 0.5;
-                    z-index: 150;
-                    pointer-events: none;
-                }
+                /* Removed loader-title styles */
             `}</style>
 
-            {!hasDealt && (
-                <div className="loader-title">
-                    Architecture / Portfolio / {new Date().getFullYear()}
-                </div>
-            )}
+            {/* Loader title removed */}
 
             <div className="gallery-grid">
                 {projects.map((project, i) => (
@@ -291,7 +288,7 @@ export default function ProjectGallery() {
             </div>
 
             <div style={{ marginTop: "3rem" }}>
-                <h2 style={{ fontSize: "5vw", lineHeight: 1, textTransform: "uppercase", fontWeight: "bold" }}>Selected Works</h2>
+                <h2 className="section-title" style={{ fontSize: "5vw", lineHeight: 1, textTransform: "uppercase", fontWeight: "bold" }}>Selected Works</h2>
             </div>
         </section>
     );
