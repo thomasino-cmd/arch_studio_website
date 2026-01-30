@@ -23,13 +23,14 @@ export default function ProjectGallery() {
     const [hasDealt, setHasDealt] = useState(false);
 
     // Random rotations for the stack effect
-    const rotations = useRef(projects.map(() => Math.random() * 8 - 4)); // -4deg to 4deg
+    const rotations = useRef(projects.map(() => Math.random() * 4 - 2)); // -2deg to 2deg
 
     useLayoutEffect(() => {
         const container = containerRef.current;
 
         if (!container) return;
 
+        document.body.classList.add("is-loading");
         document.body.style.overflow = "hidden";
         let loadHandler: (() => void) | null = null;
 
@@ -67,19 +68,20 @@ export default function ProjectGallery() {
 
                 // 3. Animate from State (Stack) to Layout (Grid)
                 Flip.from(state, {
-                    duration: 2,
-                    ease: "expo.inOut",
+                    duration: 2.8,
+                    ease: "power3.inOut",
                     stagger: {
-                        amount: 0.8,
+                        amount: 0.9,
                         from: "start"
                     },
                     absolute: true,
-                    spin: true,
                     onComplete: () => {
                         setHasDealt(true);
+                        document.body.classList.remove("is-loading");
                         document.body.style.overflow = "auto";
                         gsap.set(items, { clearProps: "all" });
                         ScrollTrigger.refresh();
+                        window.dispatchEvent(new Event("loader:complete"));
                     }
                 });
             };
@@ -126,6 +128,8 @@ export default function ProjectGallery() {
             if (loadHandler) {
                 window.removeEventListener("load", loadHandler);
             }
+            document.body.classList.remove("is-loading");
+            document.body.style.overflow = "";
             ctx.revert();
         };
     }, []);
@@ -135,7 +139,6 @@ export default function ProjectGallery() {
             ref={containerRef}
             className="stack-mode"
             style={{
-                padding: "10rem 2rem",
                 backgroundColor: "var(--background)",
                 position: "relative",
                 zIndex: 10,
@@ -147,6 +150,11 @@ export default function ProjectGallery() {
                 .stack-mode {
                     height: 100vh;
                     overflow: hidden;
+                    padding: 0 2rem;
+                }
+                .grid-mode {
+                    margin-top: -30vh;
+                    padding: 6rem 2rem 4rem;
                 }
                 .stack-mode .gallery-grid {
                     display: block;
@@ -155,11 +163,11 @@ export default function ProjectGallery() {
                 }
                 .stack-mode .project-item {
                     position: fixed;
-                    top: 50%;
+                    top: 45%;
                     left: 50%;
                     width: 320px;
                     height: 420px;
-                    transform: translate(-50%, -50%);
+                    transform: translate(-50%, -50%) rotate(var(--stack-rotation));
                     z-index: 100;
                     pointer-events: none;
                 }
@@ -173,13 +181,23 @@ export default function ProjectGallery() {
 
                 /* Final Grid State */
                 .grid-mode .gallery-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-                    gap: 6rem; /* Increased gap */
+                    display: flex;
+                    gap: 3rem;
+                    overflow-x: auto;
+                    padding: 1rem 2rem 2rem;
+                    scroll-snap-type: x mandatory;
+                    scrollbar-width: none;
+                    mask-image: linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%);
+                    -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%);
+                }
+                .grid-mode .gallery-grid::-webkit-scrollbar {
+                    display: none;
                 }
                 .grid-mode .project-item {
                     position: relative;
-                    width: 100%;
+                    width: clamp(260px, 28vw, 360px);
+                    flex: 0 0 auto;
+                    scroll-snap-align: start;
                     transform: none;
                     pointer-events: auto;
                 }
@@ -215,17 +233,13 @@ export default function ProjectGallery() {
                 </div>
             )}
 
-            <div style={{ marginBottom: "5rem" }}>
-                <h2 style={{ fontSize: "5vw", lineHeight: 1, textTransform: "uppercase", fontWeight: "bold" }}>Selected Works</h2>
-            </div>
-
             <div className="gallery-grid">
                 {projects.map((project, i) => (
                     <div
                         key={project.id}
                         className="project-item"
                         style={{
-                            transform: `translate(-50%, -50%) rotate(${rotations.current[i]}deg)`
+                            ["--stack-rotation" as any]: `${rotations.current[i]}deg`
                         }}
                     >
                         <Link href={`/projects/${project.id}`} style={{ display: "block", height: "100%" }}>
@@ -259,6 +273,10 @@ export default function ProjectGallery() {
                         </Link>
                     </div>
                 ))}
+            </div>
+
+            <div style={{ marginTop: "3rem" }}>
+                <h2 style={{ fontSize: "5vw", lineHeight: 1, textTransform: "uppercase", fontWeight: "bold" }}>Selected Works</h2>
             </div>
         </section>
     );
