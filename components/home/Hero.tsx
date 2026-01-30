@@ -9,36 +9,48 @@ export default function Hero() {
     const textRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        const ctx = gsap.context(() => {
-            // Text Reveal
-            gsap.from(".hero-char", {
-                y: "100%",
-                opacity: 0,
-                duration: 1,
-                stagger: 0.05,
-                ease: "power3.out",
-                delay: 2.5 // Wait for loader (approx)
-            });
+        const ctx = gsap.context(() => {}, containerRef);
+        const runHeroAnimation = () => {
+            ctx.add(() => {
+                // Text Reveal
+                gsap.from(".hero-char", {
+                    y: "100%",
+                    opacity: 0,
+                    duration: 1,
+                    stagger: 0.05,
+                    ease: "power3.out"
+                });
 
-            // Parallax for image?
-            gsap.to(".hero-image", {
-                yPercent: 30,
-                ease: "none",
-                scrollTrigger: {
-                    trigger: containerRef.current,
-                    start: "top top",
-                    end: "bottom top",
-                    scrub: true
-                }
+                // Parallax for image?
+                gsap.to(".hero-image", {
+                    yPercent: 30,
+                    ease: "none",
+                    scrollTrigger: {
+                        trigger: containerRef.current,
+                        start: "top top",
+                        end: "bottom top",
+                        scrub: true
+                    }
+                });
             });
-        }, containerRef);
+        };
 
-        return () => ctx.revert();
+        if (!document.body.classList.contains("is-loading")) {
+            runHeroAnimation();
+        } else {
+            window.addEventListener("loader:complete", runHeroAnimation, { once: true });
+        }
+
+        return () => {
+            window.removeEventListener("loader:complete", runHeroAnimation);
+            ctx.revert();
+        };
     }, []);
 
     return (
         <section
             ref={containerRef}
+            className="hero-section"
             style={{
                 height: "100vh",
                 display: "flex",
