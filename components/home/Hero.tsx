@@ -9,7 +9,7 @@ export default function Hero() {
     const textRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        const ctx = gsap.context(() => {}, containerRef);
+        const ctx = gsap.context(() => { }, containerRef);
         const runHeroAnimation = () => {
             ctx.add(() => {
                 // Text Reveal
@@ -19,18 +19,6 @@ export default function Hero() {
                     duration: 1,
                     stagger: 0.05,
                     ease: "power3.out"
-                });
-
-                // Parallax for image?
-                gsap.to(".hero-image", {
-                    yPercent: 30,
-                    ease: "none",
-                    scrollTrigger: {
-                        trigger: containerRef.current,
-                        start: "top top",
-                        end: "bottom top",
-                        scrub: true
-                    }
                 });
             });
         };
@@ -61,27 +49,8 @@ export default function Hero() {
                 paddingTop: "60px" // Space for header
             }}
         >
-            {/* Background Image/Video */}
-            <div
-                className="hero-image"
-                style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "120%", // Taller for parallax
-                    backgroundImage: "url('/hero.png')",
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                    zIndex: -1
-                }}
-            >
-                {/* Overlay for better text readability */}
-                <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.1)" }} />
-            </div>
-
             {/* Hero Title */}
-            <div style={{ textAlign: "center", color: "#fff", mixBlendMode: "difference" }}>
+            <div style={{ textAlign: "center", color: "var(--foreground)" }}>
                 <h1
                     ref={textRef}
                     style={{
