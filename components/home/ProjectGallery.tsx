@@ -138,6 +138,7 @@ export default function ProjectGallery() {
         <section
             ref={containerRef}
             className="stack-mode"
+            data-dealt={hasDealt ? "true" : "false"}
             style={{
                 backgroundColor: "var(--background)",
                 position: "relative",
@@ -203,15 +204,29 @@ export default function ProjectGallery() {
                 }
                 
                 .grid-mode .project-info {
+                    opacity: 0;
+                    transform: translateY(20px);
+                    transition: opacity 0.8s ease, transform 0.8s ease;
+                    transition-delay: 0.2s;
+                }
+                .grid-mode[data-dealt="true"] .project-info {
                     opacity: 1;
                     transform: translateY(0);
-                    transition: opacity 0.8s ease, transform 0.8s ease;
-                    transition-delay: 0.5s;
                 }
                 
                 .stack-mode .project-info {
                     opacity: 0;
                     transform: translateY(20px);
+                }
+
+                .section-title {
+                    opacity: 0;
+                    transform: translateY(10px);
+                    transition: opacity 0.8s ease, transform 0.8s ease;
+                }
+                .grid-mode[data-dealt="true"] .section-title {
+                    opacity: 1;
+                    transform: translateY(0);
                 }
 
                 .loader-title {
